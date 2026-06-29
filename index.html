@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Class Payment Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #1a2744;
+    --navy-mid: #243358;
+    --navy-light: #2e4070;
+    --amber: #f0a500;
+    --amber-light: #ffc840;
+    --cream: #f7f5f0;
+    --white: #ffffff;
+    --text: #1a2744;
+    --text-muted: #6b7a99;
+    --green: #22c55e;
+    --green-bg: #dcfce7;
+    --red: #ef4444;
+    --red-bg: #fee2e2;
+    --border: #e2e5ef;
+    --shadow: 0 2px 12px rgba(26,39,68,0.08);
+    --shadow-lg: 0 8px 32px rgba(26,39,68,0.14);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--navy);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 17px; color: var(--white);
+    letter-spacing: -0.3px;
+  }
+  .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--amber); }
+  .header-stats {
+    display: flex; gap: 24px;
+  }
+  .hstat {
+    text-align: right;
+  }
+  .hstat-val {
+    font-size: 15px; font-weight: 700; color: var(--amber);
+  }
+  .hstat-label {
+    font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  /* LAYOUT */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  /* TOP BAR */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .page-title {
+    font-size: 22px; font-weight: 700; color: var(--navy);
+  }
+  .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 8px; font-size: 13px;
+    font-weight: 600; cursor: pointer; border: none;
+    font-family: 'Inter', sans-serif; transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--amber); color: var(--navy);
+  }
+  .btn-primary:hover { background: var(--amber-light); transform: translateY(-1px); }
+  .btn-ghost {
+    background: transparent; color: var(--text-muted);
+    border: 1.5px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--white); color: var(--navy); }
+  .btn-danger {
+    background: transparent; color: var(--red); border: 1.5px solid #fca5a5;
+    padding: 5px 10px; font-size: 12px;
+  }
+  .btn-danger:hover { background: var(--red-bg); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+  /* GROUP CARDS */
+  .groups-grid {
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .group-card {
+    background: var(--white);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    border: 1.5px solid var(--border);
+  }
+  .group-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+  }
+  .group-title {
+    font-weight: 700; font-size: 15px; color: var(--white);
+    letter-spacing: -0.2px;
+  }
+  .group-meta {
+    font-size: 11px; color: rgba(255,255,255,0.5);
+    margin-top: 2px;
+  }
+  .group-progress-bar {
+    flex: 1; max-width: 160px;
+    height: 6px; background: rgba(255,255,255,0.15);
+    border-radius: 99px; overflow: hidden;
+  }
+  .group-progress-fill {
+    height: 100%; background: var(--amber);
+    border-radius: 99px; transition: width 0.4s ease;
+  }
+  .group-pct {
+    font-size: 13px; font-weight: 700; color: var(--amber);
+    white-space: nowrap;
+  }
+  .group-actions {
+    display: flex; gap: 8px;
+  }
+  .btn-icon {
+    background: rgba(255,255,255,0.1); border: none; cursor: pointer;
+    color: rgba(255,255,255,0.7); border-radius: 6px; padding: 5px 7px;
+    font-size: 12px; transition: all 0.15s; display: flex; align-items: center;
+    font-family: 'Inter', sans-serif; font-weight: 600;
+  }
+  .btn-icon:hover { background: rgba(255,255,255,0.2); color: #fff; }
+  .btn-icon.del:hover { background: rgba(239,68,68,0.3); color: #fca5a5; }
+
+  /* STUDENTS TABLE */
+  .students-area { padding: 4px 0 12px; }
+  .students-table { width: 100%; border-collapse: collapse; }
+  .students-table th {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 10px 20px; text-align: left; border-bottom: 1.5px solid var(--border);
+  }
+  .students-table td {
+    padding: 12px 20px; border-bottom: 1px solid var(--border);
+    font-size: 13px; vertical-align: middle;
+  }
+  .students-table tr:last-child td { border-bottom: none; }
+  .students-table tr:hover td { background: #f9f8f5; }
+
+  .student-name { font-weight: 500; }
+
+  /* RING */
+  .ring-wrap {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ring-svg { width: 32px; height: 32px; }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 3.5; }
+  .ring-fill { fill: none; stroke-width: 3.5; stroke-linecap: round;
+    transition: stroke-dashoffset 0.4s ease; transform-origin: center;
+    transform: rotate(-90deg); }
+  .ring-pct { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+
+  /* PAYMENT TOGGLE */
+  .pay-toggle {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toggle-wrap {
+    position: relative; display: inline-block;
+    width: 44px; height: 24px;
+  }
+  .toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-slider {
+    position: absolute; cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #d1d5db; border-radius: 99px;
+    transition: 0.2s;
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute;
+    height: 18px; width: 18px;
+    left: 3px; bottom: 3px;
+    background: white; border-radius: 50%;
+    transition: 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-wrap input:checked + .toggle-slider { background: var(--green); }
+  .toggle-wrap input:checked + .toggle-slider::before { transform: translateX(20px); }
+  .pay-label { font-size: 12px; font-weight: 600; }
+  .paid-label { color: var(--green); }
+  .unpaid-label { color: var(--text-muted); }
+
+  /* ADD STUDENT ROW */
+  .add-student-row {
+    padding: 10px 20px 14px;
+    display: flex; gap: 8px;
+    border-top: 1px dashed var(--border);
+  }
+  .input-field {
+    flex: 1; padding: 8px 12px; border: 1.5px solid var(--border);
+    border-radius: 7px; font-size: 13px; font-family: 'Inter', sans-serif;
+    color: var(--text); background: var(--cream);
+    outline: none; transition: border-color 0.15s;
+  }
+  .input-field:focus { border-color: var(--amber); background: var(--white); }
+  .input-field::placeholder { color: #b0b8cc; }
+
+  /* ADD GROUP MODAL */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,18,40,0.55); z-index: 200;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(3px);
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: var(--white); border-radius: 16px;
+    padding: 28px 28px 24px; width: 100%; max-width: 400px;
+    box-shadow: var(--shadow-lg);
+    animation: popIn 0.2s ease;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .modal-title { font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 18px; }
+  .modal label { font-size: 12px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 6px; }
+  .modal .input-field { width: 100%; margin-bottom: 14px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+
+  /* CALCULATOR PANEL */
+  .calc-fab {
+    position: fixed; bottom: 28px; right: 28px;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--amber); color: var(--navy);
+    border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(240,165,0,0.4);
+    font-size: 22px; display: flex; align-items: center; justify-content: center;
+    z-index: 150; transition: all 0.2s;
+  }
+  .calc-fab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(240,165,0,0.5); }
+  .calc-panel {
+    position: fixed; bottom: 90px; right: 28px;
+    background: var(--white); border-radius: 16px;
+    box-shadow: var(--shadow-lg); border: 1.5px solid var(--border);
+    width: 300px; z-index: 150; overflow: hidden;
+    display: none;
+    animation: slideUp 0.2s ease;
+  }
+  .calc-panel.show { display: block; }
+  @keyframes slideUp {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .calc-head {
+    background: var(--navy); padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .calc-head-title { font-size: 13px; font-weight: 700; color: var(--white); }
+  .calc-close {
+    background: none; border: none; color: rgba(255,255,255,0.6);
+    cursor: pointer; font-size: 18px; line-height: 1;
+    padding: 2px 6px;
+  }
+  .calc-body { padding: 16px; }
+  .calc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .calc-row label { font-size: 12px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.4px; min-width: 90px; }
+  .calc-input {
+    flex: 1; padding: 8px 10px; border: 1.5px solid var(--border);
+    border-radius: 7px; font-size: 13px; font-family: 'Inter', sans-serif;
+    color: var(--text); background: var(--cream); outline: none;
+    transition: border-color 0.15s;
+  }
+  .calc-input:focus { border-color: var(--amber); background: #fff; }
+  .calc-divider { border: none; border-top: 1.5px solid var(--border); margin: 4px 0 14px; }
+  .calc-result {
+    background: var(--navy); border-radius: 10px; padding: 14px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .calc-result-label { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.4px; }
+  .calc-result-val { font-size: 22px; font-weight: 800; color: var(--amber); }
+  .calc-breakdown { margin-top: 10px; font-size: 11px; color: var(--text-muted); }
+  .calc-breakdown span { font-weight: 600; color: var(--text); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center; padding: 48px 24px;
+    color: var(--text-muted); font-size: 14px;
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state strong { display: block; font-size: 16px; color: var(--navy);
+    font-weight: 700; margin-bottom: 6px; }
+
+  @media (max-width: 600px) {
+    header { padding: 0 16px; }
+    main { padding: 20px 12px 80px; }
+    .students-table th, .students-table td { padding: 10px 12px; }
+    .group-header { flex-wrap: wrap; }
+    .group-progress-bar { display: none; }
+    .calc-panel { right: 12px; bottom: 80px; width: calc(100vw - 24px); }
+    .calc-fab { right: 16px; bottom: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Class Payments
+  </div>
+  <div class="header-stats">
+    <div class="hstat">
+      <div class="hstat-val" id="hTotalStudents">0</div>
+      <div class="hstat-label">Students</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-val" id="hPaidCount">0</div>
+      <div class="hstat-label">Paid</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-val" id="hOverallPct">0%</div>
+      <div class="hstat-label">Overall</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="top-bar">
+    <div>
+      <div class="page-title">Payment Tracker</div>
+      <div class="page-sub">Manage student payments by group</div>
+    </div>
+    <button class="btn btn-primary" onclick="openAddGroup()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Group
+    </button>
+  </div>
+
+  <div class="groups-grid" id="groupsGrid">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">📚</div>
+      <strong>No groups yet</strong>
+      Create your first class group to start tracking payments.
+    </div>
+  </div>
+</main>
+
+<!-- ADD GROUP MODAL -->
+<div class="overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title">Add New Group</div>
+    <label>Group Name</label>
+    <input class="input-field" id="newGroupName" placeholder="e.g. Elementary MWF 13:00" onkeydown="if(event.key==='Enter') confirmAddGroup()">
+    <label>Fee per Student (UZS)</label>
+    <input class="input-field" id="newGroupFee" type="number" placeholder="e.g. 500000" onkeydown="if(event.key==='Enter') confirmAddGroup()">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAddGroup()">Create Group</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALCULATOR FAB -->
+<button class="calc-fab" onclick="toggleCalc()" title="Earnings Calculator">＄</button>
+
+<div class="calc-panel" id="calcPanel">
+  <div class="calc-head">
+    <div class="calc-head-title">💰 Earnings Calculator</div>
+    <button class="calc-close" onclick="toggleCalc()">×</button>
+  </div>
+  <div class="calc-body">
+    <div class="calc-row">
+      <label>Total Paid</label>
+      <input class="calc-input" id="calcTotal" type="number" placeholder="0" oninput="calcEarnings()" />
+    </div>
+    <div class="calc-row">
+      <label>Your Cut %</label>
+      <input class="calc-input" id="calcPct" type="number" value="45" min="0" max="100" oninput="calcEarnings()" />
+    </div>
+    <hr class="calc-divider">
+    <div class="calc-result">
+      <div>
+        <div class="calc-result-label">Your Earnings</div>
+        <div class="calc-result-val" id="calcResult">0</div>
+      </div>
+      <div style="text-align:right">
+        <div class="calc-result-label">Admin gets</div>
+        <div style="font-size:15px;font-weight:700;color:rgba(255,255,255,0.5)" id="calcAdmin">0</div>
+      </div>
+    </div>
+    <div class="calc-breakdown" id="calcBreakdown" style="margin-top:10px;font-size:11px;color:#6b7a99;"></div>
+    <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px;font-size:12px" onclick="fillFromPaid()">↑ Fill from paid students</button>
+  </div>
+</div>
+
+<script>
+let groups = JSON.parse(localStorage.getItem('cpt_groups') || '[]');
+
+function save() {
+  localStorage.setItem('cpt_groups', JSON.stringify(groups));
+  updateHeader();
+}
+
+function updateHeader() {
+  const allStudents = groups.flatMap(g => g.students);
+  const paid = allStudents.filter(s => s.paid);
+  document.getElementById('hTotalStudents').textContent = allStudents.length;
+  document.getElementById('hPaidCount').textContent = paid.length;
+  const pct = allStudents.length ? Math.round(paid.length / allStudents.length * 100) : 0;
+  document.getElementById('hOverallPct').textContent = pct + '%';
+}
+
+function render() {
+  const grid = document.getElementById('groupsGrid');
+  const empty = document.getElementById('emptyState');
+  if (groups.length === 0) {
+    grid.innerHTML = '';
+    grid.appendChild(empty);
+    empty.style.display = 'block';
+    updateHeader();
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = '';
+  groups.forEach((g, gi) => {
+    const paid = g.students.filter(s => s.paid).length;
+    const total = g.students.length;
+    const pct = total ? Math.round(paid / total * 100) : 0;
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    card.innerHTML = `
+      <div class="group-header">
+        <div>
+          <div class="group-title">${escHtml(g.name)}</div>
+          <div class="group-meta">${paid} of ${total} paid · ${g.fee ? fmtNum(g.fee) + ' UZS/student' : 'No fee set'}</div>
+        </div>
+        <div class="group-progress-bar"><div class="group-progress-fill" style="width:${pct}%"></div></div>
+        <div class="group-pct">${pct}%</div>
+        <div class="group-actions">
+          <button class="btn-icon" onclick="openAddStudent(${gi})" title="Add student">+ Add</button>
+          <button class="btn-icon del" onclick="deleteGroup(${gi})" title="Delete group">✕</button>
+        </div>
+      </div>
+      <div class="students-area">
+        ${total === 0 ? '<div style="padding:20px 20px;font-size:13px;color:#6b7a99;font-style:italic">No students yet — add one below.</div>' : `
+        <table class="students-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student Name</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${g.students.map((s, si) => `
+              <tr>
+                <td style="color:#b0b8cc;font-size:12px">${si + 1}</td>
+                <td class="student-name">${escHtml(s.name)}</td>
+                <td>
+                  <div class="ring-wrap">
+                    ${ringsvg(s.paid ? 100 : 0, s.paid)}
+                    <span class="ring-pct">${s.paid ? '100%' : '0%'}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="pay-toggle">
+                    <label class="toggle-wrap">
+                      <input type="checkbox" ${s.paid ? 'checked' : ''} onchange="togglePaid(${gi},${si},this.checked)">
+                      <span class="toggle-slider"></span>
+                    </label>
+                    <span class="pay-label ${s.paid ? 'paid-label' : 'unpaid-label'}">${s.paid ? 'Paid' : 'Unpaid'}</span>
+                    <button class="btn btn-danger btn-sm" style="margin-left:8px" onclick="deleteStudent(${gi},${si})">✕</button>
+                  </div>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`}
+        <div class="add-student-row">
+          <input class="input-field" id="sname_${gi}" placeholder="Student name..." onkeydown="if(event.key==='Enter') addStudent(${gi})">
+          <button class="btn btn-primary btn-sm" onclick="addStudent(${gi})">Add</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  updateHeader();
+}
+
+function ringsvg(pct, paid) {
+  const r = 12, c = 16;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (pct / 100) * circ;
+  const color = paid ? '#22c55e' : '#e2e5ef';
+  return `<svg class="ring-svg" viewBox="0 0 32 32">
+    <circle class="ring-bg" cx="${c}" cy="${c}" r="${r}"/>
+    <circle class="ring-fill" cx="${c}" cy="${c}" r="${r}"
+      stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+  </svg>`;
+}
+
+function togglePaid(gi, si, val) {
+  groups[gi].students[si].paid = val;
+  save();
+  render();
+}
+
+function deleteStudent(gi, si) {
+  if (!confirm(`Remove "${groups[gi].students[si].name}"?`)) return;
+  groups[gi].students.splice(si, 1);
+  save(); render();
+}
+
+function deleteGroup(gi) {
+  if (!confirm(`Delete group "${groups[gi].name}" and all its students?`)) return;
+  groups.splice(gi, 1);
+  save(); render();
+}
+
+function addStudent(gi) {
+  const inp = document.getElementById(`sname_${gi}`);
+  const name = inp.value.trim();
+  if (!name) return;
+  groups[gi].students.push({ name, paid: false });
+  save(); render();
+  setTimeout(() => { const el = document.getElementById(`sname_${gi}`); if(el) el.focus(); }, 50);
+}
+
+// Modal
+function openAddGroup() {
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('newGroupName').value = '';
+  document.getElementById('newGroupFee').value = '';
+  setTimeout(() => document.getElementById('newGroupName').focus(), 80);
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+function closeModalOutside(e) { if(e.target.id === 'modalOverlay') closeModal(); }
+function confirmAddGroup() {
+  const name = document.getElementById('newGroupName').value.trim();
+  const fee = parseFloat(document.getElementById('newGroupFee').value) || 0;
+  if (!name) { document.getElementById('newGroupName').focus(); return; }
+  groups.push({ name, fee, students: [] });
+  save(); render(); closeModal();
+}
+
+// Calculator
+function toggleCalc() {
+  document.getElementById('calcPanel').classList.toggle('show');
+}
+function calcEarnings() {
+  const total = parseFloat(document.getElementById('calcTotal').value) || 0;
+  const pct = parseFloat(document.getElementById('calcPct').value) || 0;
+  const earn = total * pct / 100;
+  const admin = total - earn;
+  document.getElementById('calcResult').textContent = fmtNum(Math.round(earn));
+  document.getElementById('calcAdmin').textContent = fmtNum(Math.round(admin));
+  if (total > 0) {
+    document.getElementById('calcBreakdown').textContent =
+      `${fmtNum(total)} × ${pct}% = ${fmtNum(Math.round(earn))} UZS`;
+  } else {
+    document.getElementById('calcBreakdown').textContent = '';
+  }
+}
+function fillFromPaid() {
+  const paidStudents = groups.flatMap(g => g.students.filter(s => s.paid));
+  const total = groups.reduce((sum, g) => {
+    const paidCount = g.students.filter(s => s.paid).length;
+    return sum + paidCount * (g.fee || 0);
+  }, 0);
+  document.getElementById('calcTotal').value = total || '';
+  calcEarnings();
+  document.getElementById('calcPanel').classList.add('show');
+}
+
+function fmtNum(n) {
+  return Number(n).toLocaleString('en-US');
+}
+function escHtml(str) {
+  return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+render();
+</script>
+</body>
+</html>
